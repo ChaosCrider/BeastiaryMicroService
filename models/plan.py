@@ -1,4 +1,4 @@
-from _mod_main import db
+from conn_config import db
 class Plan(db.Model):
     __tablename__="plans"
 

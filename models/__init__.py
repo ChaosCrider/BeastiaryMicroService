@@ -1,4 +1,4 @@
-from _mod_main import db
+from conn_config import db
 
 import models.ability
 import models.beast

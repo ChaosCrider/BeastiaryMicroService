@@ -13,8 +13,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-
-
 # creates and initializes the database
 with app.app_context():
     db.create_all()

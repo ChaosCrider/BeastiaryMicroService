@@ -1,4 +1,4 @@
-from _mod_main import db
+from conn_config import db
 
 class Ability(db.Model):
     __tablename__ = "abilities"
