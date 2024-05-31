@@ -1,6 +1,6 @@
 import conn_config
 from conn_config import db, app
-import controller._mod_beast_controller
+import controller.beast_controller
 import utils.database_reset as db_restart
 
 

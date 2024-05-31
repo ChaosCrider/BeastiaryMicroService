@@ -28,7 +28,7 @@ def add_beast(beast):
     dao.add_beast(beast)
 
 
-@app.route('/Beast/Del/', methods=['POST'])
+@app.route('/Beast/Del/', methods=['DElETE'])
 def delete_beast(beast):
     dao.remove_beast(beast)
     return jsonify(beast)
