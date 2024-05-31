@@ -4,63 +4,103 @@ class UserDAO:
     db = None
     app = None
 
-
     def __init__(self, db, app):
         self.db = db
         self.app = app
 
     def get_users(self):
-        users = User.query.all()
-        return users
+        try:
+            users = User.query.all()
+            return users
+        except Exception as e:
+            print(f"An error occurred in get_users: {e}")
+            return None
 
-    def get_user_by_id(self,id):
-        user = User.query.filter_by(id=id).first_or_404()
-        return user
+    def get_user_by_id(self, id):
+        try:
+            user = User.query.filter_by(id=id).first_or_404()
+            return user
+        except Exception as e:
+            print(f"An error occurred in get_user_by_id: {e}")
+            return None
 
-    def get_user_by_token(self,token):
-        user = User.query.filter_by(token=token).first_or_404()
-        return user
+    def get_user_by_token(self, token):
+        try:
+            user = User.query.filter_by(token=token).first_or_404()
+            return user
+        except Exception as e:
+            print(f"An error occurred in get_user_by_token: {e}")
+            return None
 
-    def get_user_by_plan_id(self,id):
-        users = User.query.filter_by(plan_id=id)
-        return users
+    def get_user_by_plan_id(self, id):
+        try:
+            users = User.query.filter_by(plan_id=id).all()
+            return users
+        except Exception as e:
+            print(f"An error occurred in get_user_by_plan_id: {e}")
+            return None
 
-    def consume_one(self,user):
-        user_update = User.query.filter_by(id=user.id)
-        user_update.consumption += 1
-        with self.app.app_context():
-            self.db.session.commit()
+    def consume_one(self, user):
+        try:
+            user_update = User.query.filter_by(id=user.id).first_or_404()
+            user_update.consumption += 1
+            with self.app.app_context():
+                self.db.session.commit()
+            return user_update.consumption
+        except Exception as e:
+            print(f"An error occurred in consume_one: {e}")
+            return None
 
-    def get_consomption(self, user):
-        u = User.query.filter_by(id=user.id).first()
-        return u.consumption
+    def get_consumption(self, user):
+        try:
+            u = User.query.filter_by(id=user.id).first()
+            return u.consumption
+        except Exception as e:
+            print(f"An error occurred in get_consumption: {e}")
+            return -1
 
-    def reset_all_consomption(self):
-        users_update = User.query.all()
-        for user in users_update:
-            user.consumption = 0
-        with self.app.app_context():
-            self.db.session.commit()
-    # have something returned,
-    # maybe an int for all user is succsefull
-    # -1 if failed
-    # user try
+    def reset_all_consumption(self):
+        try:
+            users_update = User.query.all()
+            for user in users_update:
+                user.consumption = 0
+            with self.app.app_context():
+                self.db.session.commit()
+            return len(users_update)
+        except Exception as e:
+            print(f"An error occurred in reset_all_consumption: {e}")
+            return -1
 
-    def add_user(self,user):
-        with self.app.app_context():
-            self.db.session.add(user)
-            self.db.session.commit()
+    def add_user(self, user):
+        try:
+            with self.app.app_context():
+                self.db.session.add(user)
+                self.db.session.commit()
+            return user
+        except Exception as e:
+            print(f"An error occurred in add_user: {e}")
+            return None
 
-    def remove_user(self,user):
-        with self.app.app_context():
-            self.db.session.delete(user)
-            self.db.session.commit()
+    def remove_user(self, user):
+        try:
+            with self.app.app_context():
+                self.db.session.delete(user)
+                self.db.session.commit()
+            return user
+        except Exception as e:
+            print(f"An error occurred in remove_user: {e}")
+            return None
 
-    def update_user(self,user):
-        with self.app.app_context(user):
-            user_update = User.query.filter_by(id == user.id)
-            user_update.name = user.name
-            user_update.password = user.password
-            user_update.token = user.token
-            user_update.plan_id = user.plan_id
-            self.db.session.commit()
+    def update_user(self, user):
+        try:
+            with self.app.app_context():
+                user_update = User.query.filter_by(id=user.id).first_or_404()
+                user_update.name = user.name
+                user_update.password = user.password
+                user_update.token = user.token
+                user_update.plan_id = user.plan_id
+                self.db.session.commit()
+            return user
+        except Exception as e:
+            print(f"An error occurred in update_user: {e}")
+            return None
