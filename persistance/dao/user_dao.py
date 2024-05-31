@@ -31,12 +31,20 @@ class UserDAO:
         with self.app.app_context():
             self.db.session.commit()
 
-    def reset_all_consumption(self):
+    def get_consomption(self, user):
+        u = User.query.filter_by(id=user.id).first()
+        return u.consumption
+
+    def reset_all_consomption(self):
         users_update = User.query.all()
         for user in users_update:
             user.consumption = 0
         with self.app.app_context():
             self.db.session.commit()
+    # have something returned,
+    # maybe an int for all user is succsefull
+    # -1 if failed
+    # user try
 
     def add_user(self,user):
         with self.app.app_context():
