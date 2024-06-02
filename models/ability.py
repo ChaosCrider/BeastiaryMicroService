@@ -1,4 +1,4 @@
-from conn_config import db
+from config import db
 
 class Ability(db.Model):
     __tablename__ = "abilities"
@@ -16,3 +16,12 @@ class Ability(db.Model):
         self.name = name
         self.short_description = short_description
         self.mechanics = mechanics
+
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'short_description': self.short_description,
+            'mechanics': self.mechanics
+        }

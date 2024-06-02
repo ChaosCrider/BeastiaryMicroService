@@ -1,4 +1,4 @@
-from conn_config import db
+from config import db
 import json
 
 
@@ -14,10 +14,10 @@ class Beast(db.Model):
     def __str__(self):
         return f"{self.name} : {self.description}"
 
-    def __init__(self, name, source, desctiption, stat_block):
+    def __init__(self, name, source, description, stat_block):
         self.name = name
         self.source = source
-        self.description = desctiption
+        self.description = description
         self.stat_block = stat_block
 
     #Converts the instance to a dictionary

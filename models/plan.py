@@ -1,4 +1,4 @@
-from conn_config import db
+from config import db
 class Plan(db.Model):
     __tablename__="plans"
 
@@ -18,3 +18,10 @@ class Plan(db.Model):
         self.monthly_allowance = monthly_allowance
 
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'price': self.price,
+            'monthly_allowance': self.monthly_allowance
+        }

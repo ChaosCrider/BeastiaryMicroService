@@ -1,5 +1,5 @@
 from flask import jsonify
-from conn_config import db, app
+from config import db, app
 import persistance.dao.user_dao as user_dao
 
 import utils.utils as utils
@@ -17,7 +17,7 @@ def get_user_by_id(id):
     return jsonify(dao.get_user_by_id(id).to_dict())
 
 #get by token
-@app.route('/User/token/', method=['POST'])
+@app.route('/User/token/', methods=['POST'])
 def get_user_by_token(token):
     return jsonify(dao.get_user_by_token(token).to_dict())
 
@@ -44,19 +44,19 @@ def reset_all_consomption():
     dao.reset_all_consumption()
     # have something returned, maybe int of reset users.
 
-@app.route('/User/Add', method=['POST'])
+@app.route('/User/Add', methods=['POST'])
 def add_user(user):
     dao.add_user(user)
     return jsonify(user.to_dict())
 
 # delete
-@app.route('/User/Del', method=['DELETE'])
+@app.route('/User/Del', methods=['DELETE'])
 def delete_user(user):
     dao.remove_user(user)
     return jsonify(user.to_dict())
 
 # update
-@app.route('/User/Update', method=['PORT','PUT'])
+@app.route('/User/Update', methods=['PORT','PUT'])
 def update_user(user):
     dao.update_user(user)
     return jsonify(dao.get_user_by_id(user.id).to_dict())

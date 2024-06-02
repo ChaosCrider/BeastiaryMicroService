@@ -1,4 +1,4 @@
-from conn_config import db
+from config import db
 
 class User(db.Model):
     __tablename__ = "users"
@@ -20,3 +20,12 @@ class User(db.Model):
         self.password = password
         self.plan_id = plan_id
         self.consumption = 0
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'password': self.password,
+            'plan_id': self.plan_id,
+            'consumption': self.consumption
+        }
