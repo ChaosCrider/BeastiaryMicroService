@@ -1,8 +1,3 @@
-from flask import jsonify
-from config import db, app
-import persistance.dao.beast_dao as beast_dao
-import utils.utils as utils
-
 GET = []
 POST = []
 UPD = []

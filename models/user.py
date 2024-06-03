@@ -20,6 +20,7 @@ class User(db.Model):
         self.password = password
         self.plan_id = plan_id
         self.consumption = 0
+        self.token = ''
 
     def to_dict(self):
         return {

@@ -4,33 +4,47 @@ import config as config
 # from config import db, app
 import controller.beast_controller
 import utils.database_reset as db_restart
-from tests import Beast_test, Ability_test, Plan_test
+from tests import Beast_test, Ability_test, Plan_test, User_test
 import requests
 
 # db_restart.reset_db(db, app)
 json_string = []
-
-json_string.append('{ "name": "testName", "source": "TestSource", "description": "testDescription","stat_block": "test stats block"}')
-json_string.append('{ "mechanics": "testMechanics","name": "testName","short_description": "testDescription" }')
-json_string.append('{"monthly_allowance": 55,"name": "testName","price": 5.5}')
-#json_string.append()
-
 GET_sequence =[]
-GET_sequence.append( Beast_test.GET )
-GET_sequence.append( Ability_test.GET )
-GET_sequence.append( Plan_test.GET )
-
-
 POST_sequence = []
-POST_sequence.append( Beast_test.POST )
-POST_sequence.append( Ability_test.POST )
-POST_sequence.append( Plan_test.POST )
-
-
 UPD_sequence = []
+
+
+'''
+'''
+
+# Beast tests
+json_string.append('{ "name": "testName", "source": "TestSource", "description": "testDescription","stat_block": "test stats block"}')
+GET_sequence.append( Beast_test.GET )
+POST_sequence.append( Beast_test.POST )
 UPD_sequence.append( Beast_test.UPD )
+
+
+# Ability tests
+json_string.append('{ "mechanics": "testMechanics","name": "testName","short_description": "testDescription" }')
+GET_sequence.append( Ability_test.GET )
+POST_sequence.append( Ability_test.POST )
 UPD_sequence.append( Ability_test.UPD )
+
+
+# Plan tests
+json_string.append('{"monthly_allowance": 55,"name": "testName","price": 5.5}')
+GET_sequence.append( Plan_test.GET )
+POST_sequence.append( Plan_test.POST )
 UPD_sequence.append( Plan_test.UPD )
+
+
+
+
+# User tests
+json_string.append('{"name": "testName","password": "TestPassword","plan_id": 2}')
+GET_sequence.append( User_test.GET )
+POST_sequence.append( User_test.POST )
+UPD_sequence.append( User_test.UPD )
 
 
 def run_tests():
