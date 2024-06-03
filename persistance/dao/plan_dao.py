@@ -1,36 +1,63 @@
 from models.plan import Plan
 
+class PlanDAO:
+    db = None
+    app = None
 
-db = None
-app = None
+    def __init__(self, db, app):
+        self.db = db
+        self.app = app
 
-def __init__(self, db, app):
-    self.db = db
-    self.app = app
+    def get_plans(self):
+        try:
+            return Plan.query.all()
+        except Exception as e:
+            print(f"An error occurred in get_plans: {e}")
+            return None
 
-    def get_plans():
-        return Plan.query.all()
+    def get_plan_by_id(self, id):
+        try:
+            return Plan.query.filter_by(id=id).first_or_404()
+        except Exception as e:
+            print(f"An error occurred in get_plan_by_id: {e}")
+            return None
 
-    def get_plan_by_id(id):
-        return Plan.query.filter_by(id = id).first_or_404()
+    def get_plan_under_price(self, price):
+        try:
+            return Plan.query.filter(Plan.price < price).all()
+        except Exception as e:
+            print(f"An error occurred in get_plan_under_price: {e}")
+            return None
 
-    def get_plan_uder_price(price):
-        return Plan.query.filter_by(price < price).get_or_404()
+    def add_plan(self, plan):
+        try:
+            with self.app.app_context():
+                self.db.session.add(plan)
+                self.db.session.commit()
+            return plan
+        except Exception as e:
+            print(f"An error occurred in add_plan: {e}")
+            return None
 
-    def add_plan(plan):
-        with app.app_context():
-            db.session.add(plan)
-            db.session.commit()
+    def remove_plan(self, plan):
+        try:
+            with self.app.app_context():
+                self.db.session.delete(plan)
+                self.db.session.commit()
+            return plan
+        except Exception as e:
+            print(f"An error occurred in remove_plan: {e}")
+            return None
 
-    def remove_plan(plan):
-        with app.app_context():
-            db.session.delete(plan)
-            db.session.commit()
-
-    def update_plan(plan):
-        plan_update = Plan.query.filter_by(id = plan.id)
-        plan_update.name = plan.name
-        plan_update.price = plan
-        plan_update.monthly_allowance = plan.monthly_allowance
-        with app.app_context():
-            db.session.commit()
+    def update_plan(self, plan):
+        try:
+            plan_update = Plan.query.filter_by(id=plan.id).first_or_404()
+            plan_update.name = plan.name
+            plan_update.price = plan.price
+            plan_update.monthly_allowance = plan.monthly_allowance
+            with self.app.app_context():
+                self.db.session.commit()
+            return plan
+        except Exception as e:
+            print(f"An error occurred in update_plan: {e}")
+            return None

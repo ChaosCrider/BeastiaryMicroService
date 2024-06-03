@@ -1,7 +1,9 @@
 from conn_config import db
+import json
+
 
 class Beast(db.Model):
-    __tablename__="Beasts"
+    __tablename__ = "Beasts"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False)
@@ -17,3 +19,13 @@ class Beast(db.Model):
         self.source = source
         self.description = desctiption
         self.stat_block = stat_block
+
+    #Converts the instance to a dictionary
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'source': self.source,
+            'description': self.description,
+            'stat_block': self.stat_block
+        }
