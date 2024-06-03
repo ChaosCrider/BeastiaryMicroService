@@ -49,9 +49,9 @@ class PlanDAO:
             print(f"An error occurred in remove_plan: {e}")
             return None
 
-    def update_plan(self, plan):
+    def update_plan(self, id, plan):
         try:
-            plan_update = Plan.query.filter_by(id=plan.id).first_or_404()
+            plan_update = Plan.query.filter_by(id=id).first_or_404()
             plan_update.name = plan.name
             plan_update.price = plan.price
             plan_update.monthly_allowance = plan.monthly_allowance

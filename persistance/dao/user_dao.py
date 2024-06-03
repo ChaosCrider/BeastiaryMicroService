@@ -42,44 +42,45 @@ class UserDAO:
 
     def consume_one(self, user):
         try:
-            user_update = User.query.filter_by(id=user.id).first_or_404()
-            user_update.consumption += 1
             with self.app.app_context():
+                user_update = User.query.filter_by(id=user.id).first_or_404()
+                user_update.consumption += 1
                 self.db.session.commit()
-            return user_update.consumption
+                return user_update.consumption
         except Exception as e:
             print(f"An error occurred in consume_one: {e}")
             return None
 
-    def get_consumption(self, user):
+    def get_consumption(self, user_id):
         try:
-            u = User.query.filter_by(id=user.id).first()
+            u = User.query.filter_by(id=user_id).first_or_404()
             return u.consumption
         except Exception as e:
             print(f"An error occurred in get_consumption: {e}")
             return -1
 
     def reset_all_consumption(self):
-        try:
-            users_update = User.query.all()
-            for user in users_update:
-                user.consumption = 0
-            with self.app.app_context():
+        with self.app.app_context():
+            try:
+                users_update = User.query.all()
+                for user in users_update:
+                    user.consumption = 0
                 self.db.session.commit()
-            return len(users_update)
-        except Exception as e:
-            print(f"An error occurred in reset_all_consumption: {e}")
-            return -1
+                return len(users_update)
+            except Exception as e:
+                print(f"An error occurred in reset_all_consumption: {e}")
+                return -1
 
     def add_user(self, user):
         try:
             with self.app.app_context():
                 self.db.session.add(user)
                 self.db.session.commit()
+                print('user after commit: ', user)
             return user
         except Exception as e:
             print(f"An error occurred in add_user: {e}")
-            return None
+            return str(e)
 
     def remove_user(self, user):
         try:
@@ -91,10 +92,10 @@ class UserDAO:
             print(f"An error occurred in remove_user: {e}")
             return None
 
-    def update_user(self, user):
+    def update_user(self, id, user):
         try:
             with self.app.app_context():
-                user_update = User.query.filter_by(id=user.id).first_or_404()
+                user_update = User.query.filter_by(id=id).first_or_404()
                 user_update.name = user.name
                 user_update.password = user.password
                 user_update.token = user.token

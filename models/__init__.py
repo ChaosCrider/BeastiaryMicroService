@@ -1,4 +1,4 @@
-from conn_config import db
+from config import db
 
 import models.ability
 import models.beast

@@ -17,7 +17,7 @@ class AbilityDAO:
 
     def get_ability_by_id(self, id):
         try:
-            return Ability.query.filter_by(id=id)
+            return Ability.query.filter_by(id=id).first_or_404()
         except Exception as e:
             print(f"An error occurred in get_ability_by_id: {e}")
             return None
