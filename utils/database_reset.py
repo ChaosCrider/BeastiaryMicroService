@@ -57,6 +57,8 @@ def reset_db(db, app):
         User("coffeecrisp", "coffeecrisp1", 2),
         User("gummyworm", "gummyworm2", 3),
     ]
+    users[0].token='bdeb'
+    users[1].token='1256'
 
     with app.app_context():
         for user in users:

@@ -11,6 +11,11 @@ charset = 'utf8'
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{user}@{host}/{database}?charset={charset}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# target end point for controller
+host = 'http://localhost:'
+port = 5601
+
+
 db = SQLAlchemy(app)
 
 # creates and initializes the database
