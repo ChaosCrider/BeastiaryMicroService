@@ -1,97 +1,487 @@
-from flask import jsonify, request
-from config import db, app
-import persistance.dao.user_dao as user_dao
+from flask import jsonify, request as flask_request
+import requests as py_requests
+from config import db, app, host, port
 import utils.utils as utils
 from models.user import User
 
-dao = user_dao.UserDAO(db, app)
+# left to do: fix consume calls, data service not working properly I think
+# add md5 for password encryption
+# use pyjwt for encoding => https://pyjwt.readthedocs.io/en/latest/usage.html#encoding-decoding-tokens-with-hs256
+
 
 #get all
 @app.route('/User')
 def get_all_user():
-    return jsonify(utils.convert_list_to_dict(dao.get_users()))
+    """
+    Gets all Users
+    ---
+    tags:
+      - "User Operations"
+    responses:
+      '200':
+        description: "A list of users"
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type:string
+                  name:
+                    type:string
+                  password:
+                    type: string
+                  consumption:
+                    type: string
+                  plan_id:
+                    type: string
+      '400':
+        description: "Bad Request"
+      '404':
+        description: "Not Found"
+      '500':
+        description: "Internal Server Error"
+    """
+    try: #next convert dao into controller
+        url = f'{host}{port}/Data/User'
+        headers = {'Content-Type': 'application/json'}
+        response = py_requests.get(url) #, json=json_data, headers=headers
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        users = response.text
+        return users
+    except py_requests.exceptions.HTTPError as http_err:
+        return (f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        return (f"An error occurred: {err}")
+    
 
 #get by  id
 @app.route('/User/<id>')
 def get_user_by_id(id):
-    return jsonify(dao.get_user_by_id(id).to_dict())
+    """
+    Gets a user by matching id
+    ---
+    tags:
+      - "User Operations"
+    parameters:
+      - in: "path"
+        name: "id"
+        description: "the id of the user to be returned"
+        type: "string"
+    responses:
+      '200':
+        description:
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                  id:
+                    type:string
+                  name:
+                    type:string
+                  password:
+                    type: string
+                  consumption:
+                    type: string
+                  plan_id:
+                    type: string
+      '400':
+        description: "Bad Request"
+      '404':
+        description: "Not Found"
+      '500':
+        description: "Internal Server Error"
+    """
+    try:
+        url = f'{host}{port}/Data/User/{id}'
+        response = py_requests.get(url)
+        response.raise_for_status()
+        user = response.text
+        return user
+    except py_requests.exceptions.HTTPError as http_err:
+        return (f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        return (f"An error occurred: {err}")
 
 #get by token
-@app.route('/User/token/', methods=['POST'])
+@app.route('/User/Token/', methods=['POST'])
 def get_user_by_token():
-    token_data = request.get_json()
-    token = None
-    if not token_data:
-        return jsonify({"error": "Invalid token"}), 400
-    else:
-        token = token_data.name
-        print(str(token))
+    """
+    Posts a user to be added to the persistence
+    ---
+    tags:
+      - "User Operations"
+    post:
+      produces:
+        - "application/json"
+      consumes:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "the identification token"
+          required: true
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                example: "bdeb"
+      responses:
+        '200':
+          description: a user
+          content:
+            application/json:
+              schema:
+              type: object
+              properties:
+                  id:
+                    type:string
+                  name:
+                    type:string
+                  password:
+                    type: string
+                  consumption:
+                    type: string
+                  plan_id:
+                    type: string
+        400:
+          description: Bad request
+        404:
+          description: Not found
+        500:
+          description: Internal server error
+    """
     try:
-        user = dao.get_user_by_token(token)
-        return jsonify(user), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        json = flask_request.get_json()
+        url = f'{host}{port}/Data/User/Token'
+        headers = {'Content-Type': 'application/json'}
+        response = py_requests.post(url, json=json, headers = headers)
+        response.raise_for_status()
+        consume = response.text
+        return consume
+    except py_requests.exceptions.HTTPError as http_err:
+        return (f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        return (f"An error occurred: {err}")
 
-#get by plan id
-@app.route('/User/Plan/<id>')
-def get_users_by_plan_id(id):
-    return jsonify(utils.convert_list_to_dict(dao.get_user_by_plan_id(id)))
 
 # consume 1
 @app.route('/User/Consume/<id>')
 def consumeb_one(id):
+    """
+    Gets a user's consumption up by one
+    ---
+    tags:
+      - "User Operations"
+    parameters:
+      - in: "path"
+        name: "id"
+        description: "the id of the user to be returned"
+        type: "string"
+    responses:
+      '200':
+        description:
+        content:
+          "application/json":
+            schema:
+              type: int
+      '400':
+        description: "Bad Request"
+      '404':
+        description: "Not Found"
+      '500':
+        description: "Internal Server Error"
+    """
     try:
-        user = dao.get_user_by_id(id)
-        if not user:
-            return jsonify({"error":"no user with matching ID found"}), 404
-        consumption = dao.consume_one(user)
-        return jsonify({"consumption": consumption}), 200
-    except Exception as e:
-        return jsonify({"error":str(e)}), 500
+        url = f'{host}{port}/Data/User/Consume/{id}'
+        response = py_requests.get(url)
+        response.raise_for_status()
+        consume = response.text
+        return consume
+    except py_requests.exceptions.HTTPError as http_err:
+        return (f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        return (f"An error occurred: {err}")
 
 # get consomption by user id
 @app.route('/User/Consume/User/<id>')
 def get_consomption_by_user_id(id):
-    consumption = dao.get_consumption(id)
-    return jsonify(consumption), 200
+    """
+    Gets a user by matching id
+    ---
+    tags:
+      - "User Operations"
+    parameters:
+      - in: "path"
+        name: "id"
+        description: "the id of the user to be returned"
+        type: "string"
+    responses:
+      '200':
+        description:
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                monthly_allowance:
+                  type: string
+                price:
+                  type: string
+      '400':
+        description: "Bad Request"
+      '404':
+        description: "Not Found"
+      '500':
+        description: "Internal Server Error"
+    """
+    try:
+        url = f'{host}{port}/Data/User/Consume/User/{id}'
+        response = py_requests.get(url)
+        response.raise_for_status()
+        consume = response.text
+        return consume
+    except py_requests.exceptions.HTTPError as http_err:
+        return (f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        return (f"An error occurred: {err}")
 
 # reset consomption
 @app.route('/User/Consume/Reset')
 def reset_all_consomption():
-    affected_rows = dao.reset_all_consumption()
-    return {"affected_rows": affected_rows}, 200
-    # have something returned, maybe int of reset users.
+    """
+    Gets all Users
+    ---
+    tags:
+      - "User Operations"
+    responses:
+      '200':
+        description: "A list of users"
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type:string
+                  name:
+                    type:string
+                  monthly_allowance:
+                    type: string
+                  price:
+                    type: string
+      '400':
+        description: "Bad Request"
+      '404':
+        description: "Not Found"
+      '500':
+        description: "Internal Server Error"
+    """
+    try:
+        url = f'{host}{port}/Data/User/Consume/Reset'
+        response = py_requests.get(url)
+        response.raise_for_status()
+        consume = response.text
+        return consume
+    except py_requests.exceptions.HTTPError as http_err:
+        return (f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        return (f"An error occurred: {err}")
 
 @app.route('/User/Add', methods=['POST'])
 def add_user():
-    user_json = request.get_json()
-    if not user_json:
-        return jsonify({"error":"Invalid Json data"}), 400
+    """
+    Posts a user to be added to the persistence
+    ---
+    tags:
+      - "User Operations"
+    post:
+      produces:
+        - "application/json"
+      consumes:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User Data to be added"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "Conrad"
+              password:
+                type: "250"
+                example: "not1234"
+              plan_id:
+                type: string
+                example: "1"
+      responses:
+        '201':
+          description: An abilities
+          content:
+            application/json:
+              schema:
+              type: object
+              properties:
+                  id:
+                    type:string
+                  name:
+                    type:string
+                  password:
+                    type: string
+                  consumption:
+                    type: string
+                  plan_id:
+                    type: string
+        400:
+          description: Bad request
+        404:
+          description: Not found
+        500:
+          description: Internal server error
+    """
     try:
-        user = User(**user_json)
-        u = dao.add_user(user)
-        return user.to_dict(), 201
+        url = f'{host}{port}/Data/User/Add'
+        json = flask_request.get_json()
+        if not json:
+            return jsonify({"error": "Invalid JSON data"}), 400
+        headers = {'Content-Type': 'application/json'}
+        response = py_requests.post(url, json=json, headers = headers)
+        user = response.text
+        return user, 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # delete
 @app.route('/User/Del/<id>', methods=['DELETE'])
 def delete_user(id):
-    user = dao.get_user_by_id(id)
-    dao.remove_user(user)
-    return jsonify(user.to_dict())
+    """
+    Deletes a user from the persistence
+    ---
+    tags:
+      - "User Operations"
+    delete:
+      parameter:
+        - in: "path"
+          name: "id"
+          type: "String"
+          description: "The id of the user to be removed"
+      responses:
+        '200':
+          description: An abilities
+          content:
+            application/json:
+              schema:
+              type: object
+              properties:
+                  id:
+                    type:string
+                  name:
+                    type:string
+                  password:
+                    type: string
+                  consumption:
+                    type: string
+                  plan_id:
+                    type: string
+        400:
+          description: Bad request
+        404:
+          description: Not found
+        500:
+          description: Internal server error
+    """
+    try:
+        url = f'{host}{port}/Data/User/Del{id}'
+        response = py_requests.get(url)
+        response.raise_for_status()
+        user = response.text
+        return user
+    except py_requests.exceptions.HTTPError as http_err:
+        return (f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        return (f"An error occurred: {err}")
 
 # update
-@app.route('/User/Update/<id>', methods=['POST','PUT'])
+@app.route('/User/Update/<id>', methods=['PUT'])
 def update_user(id):
-    user_json = request.get_json()
-    if not user_json:
-        return jsonify({"error": "Invalid Json data"}), 400
-
+    """
+    Puts an update on an existing ability.
+    ---
+    tags:
+      - "User Operations"
+    put:
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User Data to be updated"
+          required: true
+          schema:
+            type: "Object"
+            properties:
+              name:
+                type: string
+                example: "premium user"
+              monthly_allowance:
+                type: string
+                example: "20000"
+              price:
+                type: string
+                example: "1.00"
+        - in: "path"
+          name: "id"
+          type: "string"
+          description: "the id of the user to be updated"
+          required: true
+      responses:
+        '200':
+          description: An abilities
+          content:
+            application/json:
+              schema:
+              type: object
+              properties:
+                  id:
+                    type:string
+                  name:
+                    type:string
+                  password:
+                    type: string
+                  consumption:
+                    type: string
+                  plan_id:
+                    type: string
+        400:
+          description: Bad request
+        404:
+          description: Not found
+        500:
+          description: Internal server error
+    """
     try:
-        user = User(**user_json)
-        dao.update_user(id, user)
-        return user.to_dict(), 201
+        url = f'{host}{port}/Data/User/Update/{id}'
+        json = flask_request.get_json()
+        if not json:
+            return jsonify({"error": "Invalid JSON data"}), 400
+        headers = {'Content-Type': 'application/json'}
+        response = py_requests.put(url, json=json, headers = headers)
+        user = response.text
+        return user, 201
     except Exception as e:
-        return jsonify({"error":str(e)}), 500
-
+        return jsonify({"error": str(e)}), 500
