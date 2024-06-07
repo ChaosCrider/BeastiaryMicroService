@@ -4,9 +4,6 @@ from config import db, app, host, port
 import utils.utils as utils
 from models.user import User
 
-# left to do: fix consume calls, data service not working properly I think
-# add md5 for password encryption
-# use pyjwt for encoding => https://pyjwt.readthedocs.io/en/latest/usage.html#encoding-decoding-tokens-with-hs256
 
 
 #get all
@@ -211,37 +208,42 @@ def consumeb_one(id):
 @app.route('/User/Consume/User/<id>')
 def get_consomption_by_user_id(id):
     """
-    Gets a user by matching id
+    Consumes data for a user by user ID
     ---
     tags:
       - "User Operations"
-    parameters:
-      - in: "path"
-        name: "id"
-        description: "the id of the user to be returned"
-        type: "string"
-    responses:
-      '200':
-        description:
-        content:
-          "application/json":
-            schema:
-              type: object
-              properties:
-                id:
-                  type: string
-                name:
-                  type: string
-                monthly_allowance:
-                  type: string
-                price:
-                  type: string
-      '400':
-        description: "Bad Request"
-      '404':
-        description: "Not Found"
-      '500':
-        description: "Internal Server Error"
+    get:
+      summary: "Consume data for a user by ID"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: "string"
+          required: true
+          description: "The ID of the user to consume data for"
+      responses:
+        '200':
+          description: "Data consumed successfully"
+          schema:
+            type: "string"
+            example: "Data consumption successful"
+        '400':
+          description: "Bad request"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        '500':
+          description: "Internal Server Error"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
     """
     try:
         url = f'{host}{port}/Data/User/Consume/User/{id}'
@@ -258,13 +260,13 @@ def get_consomption_by_user_id(id):
 @app.route('/User/Consume/Reset')
 def reset_all_consomption():
     """
-    Gets all Users
+    Gets a reset of all consumption going.
     ---
     tags:
       - "User Operations"
     responses:
       '200':
-        description: "A list of users"
+        description: "an amount of updated accounts."
         content:
           application/json:
             schema:
@@ -289,10 +291,13 @@ def reset_all_consomption():
     """
     try:
         url = f'{host}{port}/Data/User/Consume/Reset'
+        print(url)
         response = py_requests.get(url)
         response.raise_for_status()
-        consume = response.text
-        return consume
+        print(response)
+        rows = response.text
+        print(rows)
+        return rows
     except py_requests.exceptions.HTTPError as http_err:
         return (f"HTTP error occurred: {http_err}")
     except Exception as err:
@@ -483,5 +488,72 @@ def update_user(id):
         response = py_requests.put(url, json=json, headers = headers)
         user = response.text
         return user, 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/User/login', methods=['POST'])
+def login():
+    """
+    Posts a request for a user's token
+    ---
+    tags:
+      - "User Operations"
+    post:
+      summary: "Returns the user's token"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User login data"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              username:
+                type: "string"
+                example: "admin"
+              password:
+                type: "string"
+                example: "coffeecrisp1"
+      responses:
+        '200':
+          description: "Successfully returned the token"
+          schema:
+            type: "object"
+            properties:
+              token:
+                type: "string"
+                example: "some-jwt-token"
+        '400':
+          description: "Invalid JSON data"
+          schema:
+            type: "object"
+            properties:
+              error:
+                type: "string"
+                example: "Invalid JSON data"
+        '500':
+          description: "Internal Server Error"
+          schema:
+            type: "object"
+            properties:
+              error:
+                type: "string"
+                example: "Internal Server Error"
+    """
+    try:
+        url = f'{host}{port}/Data/User/login'
+        json = flask_request.get_json()
+        if not json:
+            return jsonify({"error": "Invalid JSON data"}), 400
+        headers = {'Content-Type': 'application/json'}
+        response = py_requests.post(url, json=json, headers = headers)
+        token = response.text
+        return token, 200
+    except py_requests.exceptions.HTTPError as http_err:
+        return jsonify({"error": f"HTTP error occurred: {http_err}"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500

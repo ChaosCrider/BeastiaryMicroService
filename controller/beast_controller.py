@@ -1,6 +1,7 @@
-from flask import request as flask_request, jsonify
+from flask import request as flask_request, jsonify, json
 import requests as py_requests
 from config import db, app, host, port
+from models.user import User
 
 
 @app.route('/Beast')
@@ -44,10 +45,7 @@ def index():
     """
     try:
         url = f'{host}{port}/Data/Beast'
-        headers = {'Content-Type': 'application/json'}
-        response = py_requests.get(url) #, json=json_data, headers=headers
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        beasts = response.text
+        beasts = url_call(url)
         return beasts
     except py_requests.exceptions.HTTPError as http_err:
         return (f"HTTP error occurred: {http_err}")
@@ -99,9 +97,7 @@ def get_beast_by_id(id):
     """
     try:
         url = f'{host}{port}/Data/Beast/{id}'
-        response = py_requests.get(url)
-        response.raise_for_status()
-        beast = response.text
+        beast = url_call(url)
         return beast, 200
     except py_requests.exceptions.HTTPError as http_err:
         return (f"HTTP error occurred: {http_err}"), http_err.response.status_code
@@ -159,9 +155,7 @@ def get_beast_by_source(source):
     """
     try:
         url = f'{host}{port}/Data/Beast/Source/{source}'
-        response = py_requests.get(url) #, json=json_data, headers=headers
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        beasts = response.text
+        beasts = url_call(url)
         return beasts
     except py_requests.exceptions.HTTPError as http_err:
         return (f"HTTP error occurred: {http_err}")
@@ -195,43 +189,41 @@ def add_beast():
             type: "object"
             properties:
               name:
-                type: string
+                type: "string"
                 example: "Wolf"
               source:
-                type: string
+                type: "string"
                 example: "D&D"
               description:
-                type: string
+                type: "string"
                 example: "A wild canidae of medium size"
               stat_block:
-                type: string
+                type: "string"
                 example: "hp: 22, AC:15, ini: +2 ..."
+              token:
+                type: "string"
+                example: "1256"
       responses:
         '201':
           description: "Beast data added successfully"
           schema:
             type: "object"
             properties:
-              message:
+              id:
+                type: "integer"
+                example: 1
+              name:
                 type: "string"
-              data:
-                type: "object"
-                properties:
-                  id:
-                    type: integer
-                    example: 1
-                  name:
-                    type: string
-                    example: "AAA"
-                  source:
-                    type: string
-                    example: "A"
-                  description:
-                    type: string
-                    example: "AAA"
-                  stat_block:
-                    type: string
-                    example: "AAA"
+                example: "Wolf"
+              source:
+                type: "string"
+                example: "D&D"
+              description:
+                type: "string"
+                example: "A wild canidae of medium size"
+              stat_block:
+                type: "string"
+                example: "hp: 22, AC:15, ini: +2 ..."
         '400':
           description: "Bad request"
           schema:
@@ -247,18 +239,43 @@ def add_beast():
               message:
                 type: "string"
     """
-    try:
-        url = f'{host}{port}/Data/Beast/Add'
-        json = flask_request.get_json()
-        if not json:
-            return jsonify({"error": "Invalid JSON data"}), 400
-        headers = {'Content-Type': 'application/json'}
-        response = py_requests.post(url, json=json, headers = headers)
-        beast = response.text
-        return beast, 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    json_data = flask_request.get_json()
+    token = json_data.get("token", None)
+    if token:
+        #get user by token
+        url = f'{host}{port}/Data/User/Token'
+        user_data = url_call_json(url, token)
+        if not isinstance(user_data, dict):
+            user_data = json.loads(user_data)
 
+        #get user details
+        user_id = user_data.get('id', 1)
+        consumption = user_data.get('consumption', 65535)
+        plan_id = user_data.get('plan_id', 1)
+
+        #get plan's allowance
+        url = f'{host}{port}/Data/Plan/{plan_id}'
+        plan_data = url_call(url)
+        if not isinstance(plan_data, dict):
+            plan_data = json.loads(plan_data)
+        allowance = plan_data.get('monthly_allowance', 0)
+
+        if allowance > consumption:
+            try: # consumes 1 for the user
+                url = f'{host}{port}/Data/User/Consume/{user_id}'  # consume by id url
+                url_call(url)
+            except py_requests.exceptions.HTTPError as http_err:
+                return (f"HTTP error occurred: {http_err}")
+            except Exception as err:
+                return (f"An error occurred: {err}")
+
+            try: # adds the beasts and returns it
+                url = f'{host}{port}/Data/Beast/Add'
+                json_data = flask_request.get_json()
+                beast = url_call_json(url, json_data)
+                return beast, 201
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
 
 
 @app.route('/Beast/Del/<id>', methods=['DElETE'])
@@ -298,79 +315,76 @@ def delete_beast(id):
     """
     try:
         url = f'{host}{port}/Data/Beast/Del{id}'
-        response = py_requests.get(url)
-        response.raise_for_status()
-        beast = response.text
+        beast = url_call(url)
         return beast
     except py_requests.exceptions.HTTPError as http_err:
         return (f"HTTP error occurred: {http_err}")
     except Exception as err:
         return (f"An error occurred: {err}")
 
-@app.route('/Beast/Update/<id>',methods=['PUT'])
-def update_beast(id):
+@app.route('/Beast/Update/<beast_id>',methods=['PUT'])
+def update_beast(beast_id):
     """
-    Puts an update to a beast from the database
+    Puts an update to a beast in the database
     ---
     tags:
       - "Beast Operations"
     put:
-      summary: "Add a new beast data"
+      summary: "Update existing beast data"
       consumes:
         - "application/json"
       produces:
         - "application/json"
       parameters:
         - in: "path"
-          name: "ID"
+          name: "beast_id"
           type: "string"
-          require: true
-          description: "the id of the beast to update"
+          required: true
+          description: "The ID of the beast to update"
+          example: "5"
         - in: "body"
           name: "body"
-          description: "Beast data to be added"
+          description: "Beast data to be updated"
           required: true
           schema:
             type: "object"
             properties:
               name:
-                type: string
+                type: "string"
                 example: "Wolf"
               source:
-                type: string
+                type: "string"
                 example: "D&D"
               description:
-                type: string
+                type: "string"
                 example: "A wild canidae of medium size"
               stat_block:
-                type: string
+                type: "string"
                 example: "hp: 22, AC:15, ini: +2 ..."
+              token:
+                type: "string"
+                example: "1256"
       responses:
         '201':
-          description: "Beast data added successfully"
+          description: "Beast data updated successfully"
           schema:
             type: "object"
             properties:
-              message:
+              id:
+                type: "integer"
+                example: 1
+              name:
                 type: "string"
-              data:
-                type: "object"
-                properties:
-                  id:
-                    type: integer
-                    example: 1
-                  name:
-                    type: string
-                    example: "AAA"
-                  source:
-                    type: string
-                    example: "A"
-                  description:
-                    type: string
-                    example: "AAA"
-                  stat_block:
-                    type: string
-                    example: "AAA"
+                example: "Wolf"
+              source:
+                type: "string"
+                example: "D&D"
+              description:
+                type: "string"
+                example: "A wild canidae of medium size"
+              stat_block:
+                type: "string"
+                example: "hp: 22, AC:15, ini: +2 ..."
         '400':
           description: "Bad request"
           schema:
@@ -386,14 +400,60 @@ def update_beast(id):
               message:
                 type: "string"
     """
-    try:
-        url = f'{host}{port}/Data/Beast/Update/{id}'
-        json = flask_request.get_json()
-        if not json:
-            return jsonify({"error": "Invalid JSON data"}), 400
-        headers = {'Content-Type': 'application/json'}
+    json_data = flask_request.get_json()
+    token = json_data.get("token", None)
+    if token:
+        #get user by token
+        url = f'{host}{port}/Data/User/Token'
+        user_data = url_call_json(url, token)
+        if not isinstance(user_data, dict):
+            user_data = json.loads(user_data)
+
+        #get user details
+        user_id = user_data.get('id', 1)
+        consumption = user_data.get('consumption', 65535)
+        plan_id = user_data.get('plan_id', 1)
+
+        #get plan's allowance
+        url = f'{host}{port}/Data/Plan/{plan_id}'
+        plan_data = url_call(url)
+        if not isinstance(plan_data, dict):
+            plan_data = json.loads(plan_data)
+        allowance = plan_data.get('monthly_allowance', 0)
+
+        if allowance > consumption:
+            try: # consumes 1 for the user
+                url = f'{host}{port}/Data/User/Consume/{user_id}'  # consume by id url
+                url_call(url)
+            except py_requests.exceptions.HTTPError as http_err:
+                return (f"HTTP error occurred: {http_err}")
+            except Exception as err:
+                return (f"An error occurred: {err}")
+
+            try:
+                url = f'{host}{port}/Data/Beast/Update/{beast_id}'
+                json_data = flask_request.get_json()
+                beast = url_call_json(url, json_data, "put")
+                return beast, 201
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+
+
+
+
+def url_call_json(url, json, method=None):
+    if not json:
+        return jsonify({"error": "Invalid JSON data"}), 400
+    headers = {'Content-Type': 'application/json'}
+    if method == "put":
         response = py_requests.put(url, json=json, headers = headers)
-        beast = response.text
-        return beast, 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    else:
+        response = py_requests.post(url, json=json, headers = headers)
+    response.raise_for_status()
+    return response.text
+
+
+def url_call(url):
+    response = py_requests.get(url)
+    response.raise_for_status()
+    return response.text
