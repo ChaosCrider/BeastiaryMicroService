@@ -14,11 +14,12 @@ class Beast(db.Model):
     def __str__(self):
         return f"{self.name} : {self.description}"
 
-    def __init__(self, name, source, description, stat_block):
+    def __init__(self, name, source, description, stat_block, token=None):
         self.name = name
         self.source = source
         self.description = description
         self.stat_block = stat_block
+        self.token = token
 
     #Converts the instance to a dictionary
     def to_dict(self):

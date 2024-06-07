@@ -13,34 +13,35 @@ GET_sequence =[]
 POST_sequence = []
 UPD_sequence = []
 
-'''
+
 # Beast tests
-json_string.append('{ "name": "testName", "source": "TestSource", "description": "testDescription","stat_block": "test stats block"}')
+json_string.append('{ "name": "testName", "source": "TestSource", "description": "testDescription","stat_block": "test stats block", "token":"1256"}')
 GET_sequence.append( Beast_test.GET )
 POST_sequence.append( Beast_test.POST )
 UPD_sequence.append( Beast_test.UPD )
 
-
+'''
 # Ability tests
-json_string.append('{ "mechanics": "testMechanics","name": "testName","short_description": "testDescription" }')
+json_string.append('{ "mechanics": "testMechanics","name": "testName","short_description": "testDescription", "token":"1256" }')
 GET_sequence.append( Ability_test.GET )
 POST_sequence.append( Ability_test.POST )
 UPD_sequence.append( Ability_test.UPD )
 
-'''
+
 # Plan tests
-json_string.append('{"monthly_allowance": 55,"name": "testName","price": 5.5}')
+json_string.append('{"monthly_allowance": 55,"name": "testName","price": 5.5, "token":"1256"}')
 GET_sequence.append( Plan_test.GET )
 POST_sequence.append( Plan_test.POST )
 UPD_sequence.append( Plan_test.UPD )
 
-'''
+
 # User tests
-json_string.append('{"name": "testName","password": "TestPassword","plan_id": 2}')
+json_string.append('{"name": "testName","password": "TestPassword","plan_id": 2, "token":"1256"}')
 GET_sequence.append( User_test.GET )
 POST_sequence.append( User_test.POST )
 UPD_sequence.append( User_test.UPD )
 '''
+
 
 def run_tests():
     print('test run stated')

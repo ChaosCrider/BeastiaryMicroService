@@ -2,6 +2,7 @@ from models.ability import Ability
 from models.beast import Beast
 from models.plan import Plan
 from models.user import User
+from controller.auth.Authentication import hash_string
 
 
 def reset_db(db, app):
@@ -42,9 +43,10 @@ def reset_db(db, app):
 
     # Add Plans
     plans = [
-        Plan("aaa", "1", "10"),
-        Plan("bbb", "4", "50"),
-        Plan("ccc", "175", "250"),
+        Plan("admin", 0, 65535),
+        Plan("freemium", 0, 3),
+        Plan("basic", 1, 12),
+        Plan("premium", 2.99, 50)
     ]
     with app.app_context():
         for plan in plans:
@@ -53,9 +55,9 @@ def reset_db(db, app):
 
     # Add Users
     users = [
-        User("bubblegum", "bubblegum0", 1),
-        User("coffeecrisp", "coffeecrisp1", 2),
-        User("gummyworm", "gummyworm2", 3),
+        User("guest", hash_string("bubblegum0"), 2),
+        User("admin", hash_string("coffeecrisp1"), 1),
+        User("test", hash_string("gummyworm2"), 3),
     ]
     users[0].token='bdeb'
     users[1].token='1256'

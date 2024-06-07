@@ -1,11 +1,10 @@
-from flask import request as flask_request, jsonify
+from flask import request as flask_request, jsonify, json
 import utils.utils as utils
 from models.user import User
 from config import db, app
+from controller.auth.Authentication import encode, decode, hash_string
 
-# to add:
-# get token by username/password,
-# set token,
+
 # check consume vs plan
 
 
@@ -31,8 +30,7 @@ def get_user_by_id(id):
 @app.route('/Data/User/Token', methods=['POST'])
 def get_user_by_token():
     try:
-        json = flask_request.get_json()
-        token = json.get('token', '')
+        token = flask_request.get_json()
         user = User.query.filter_by(token=token).first_or_404()
         return user.to_dict()
     except Exception as e:
@@ -55,7 +53,7 @@ def consume_one(user_id):
             user_update = User.query.filter_by(id=user_id).first_or_404()
             user_update.consumption += 1
             db.session.commit()
-            return user_update.consumption
+            return jsonify(user_update.consumption)
     except Exception as e:
         print(f"An error occurred in consume_one: {e}")
         return None
@@ -73,11 +71,14 @@ def get_consumption(user_id):
 def reset_all_consumption():
     with app.app_context():
         try:
+            print('1')
             users_update = User.query.all()
+            print(users_update)
             for user in users_update:
                 user.consumption = 0
             db.session.commit()
-            return len(users_update)
+            print(len(users_update))
+            return jsonify(len(users_update))
         except Exception as e:
             print(f"An error occurred in reset_all_consumption: {e}")
             return -1
@@ -94,6 +95,7 @@ def add_user():
             else:
                 user = user_data
                 print('user data not a dict')
+            user.password = hash_string(user.password)
             db.session.add(user)
             db.session.commit()
             return user.to_dict()
@@ -129,3 +131,36 @@ def update_user(user_id):
     except Exception as e:
         print(f"An error occurred in update_user: {e}")
         return None
+
+
+@app.route('/Data/User/login', methods=['POST'])
+def login():
+    print('1')
+    credentials = flask_request.get_json()
+    print('2')
+    if credentials:
+        print('3')
+        try:
+            if not isinstance(credentials, dict):
+                credentials = json.loads(credentials)
+            print('4')
+            username = credentials.get('username', '')
+            raw_password = credentials.get('password', '')
+            print(f'5 , {username}, {raw_password}' )
+            hashed_password = hash_string(raw_password)
+            print('6 ,', hashed_password)
+            try:
+                user = User.query.filter_by(name=username, password=hashed_password).first()
+                print('7')
+                if not user.token or user.token == '':
+                    user.token = encode({"username":user.username, "password":user.password, "id": user.id})
+                print('8')
+                token = user.token
+                print(token)
+                return jsonify(token)
+            except Exception as e:
+                return e
+        except Exception as e:
+            return e
+    else:
+        return 'credentials not found'
