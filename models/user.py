@@ -15,7 +15,7 @@ class User(db.Model):
     def __str__(self):
         return f"{self.name} - current plan: {self.plan}"
 
-    def __init__(self, name, password, plan_id):
+    def __init__(self, name, password, plan_id=2):
         self.name = name
         self.password = password
         self.plan_id = plan_id

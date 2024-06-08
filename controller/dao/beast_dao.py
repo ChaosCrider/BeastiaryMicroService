@@ -52,14 +52,19 @@ def add_beast():
         return e
 
 
-@app.route('/Data/Beast/Del/<id>', methods=['DELETE'])
+@app.route('/Data/Beast/Del/<beast_id>', methods=['DELETE'])
 def remove_beast(beast_id):
+    print('del beast dao reached')
     try:
         with app.app_context():
+            print(1)
             beast = Beast.query.filter_by(id = beast_id).first_or_404()
+            print(2)
             db.session.delete(beast)
+            print(3)
             db.session.commit()
-            return beast.to_dict()
+            print(4)
+        return beast.to_dict()
     except Exception as e:
         print(f"An error occurred in remove_beast: {e}")
         return None

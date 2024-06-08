@@ -552,6 +552,7 @@ def login():
         headers = {'Content-Type': 'application/json'}
         response = py_requests.post(url, json=json, headers = headers)
         token = response.text
+        print(token)
         return token, 200
     except py_requests.exceptions.HTTPError as http_err:
         return jsonify({"error": f"HTTP error occurred: {http_err}"}), 500

@@ -89,6 +89,7 @@ def add_user():
         with app.app_context():
             user = None
             user_data = flask_request.get_json()
+            print(user_data)
             if isinstance(user_data, dict):
                 user = User(**user_data)
                 print('User created')
@@ -135,30 +136,24 @@ def update_user(user_id):
 
 @app.route('/Data/User/login', methods=['POST'])
 def login():
-    print('1')
     credentials = flask_request.get_json()
-    print('2')
     if credentials:
-        print('3')
         try:
             if not isinstance(credentials, dict):
                 credentials = json.loads(credentials)
-            print('4')
             username = credentials.get('username', '')
             raw_password = credentials.get('password', '')
-            print(f'5 , {username}, {raw_password}' )
             hashed_password = hash_string(raw_password)
-            print('6 ,', hashed_password)
             try:
                 user = User.query.filter_by(name=username, password=hashed_password).first()
-                print('7')
+                print(f" user token: [{user.token}]")
                 if not user.token or user.token == '':
-                    user.token = encode({"username":user.username, "password":user.password, "id": user.id})
-                print('8')
+                    user.token = encode({"name":user.name, "password":user.password, "id": user.id})
+                    db.session.commit()
                 token = user.token
-                print(token)
                 return jsonify(token)
             except Exception as e:
+                print('user.token could not be retreived')
                 return e
         except Exception as e:
             return e

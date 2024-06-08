@@ -44,9 +44,9 @@ def reset_db(db, app):
     # Add Plans
     plans = [
         Plan("admin", 0, 65535),
-        Plan("freemium", 0, 3),
-        Plan("basic", 1, 12),
-        Plan("premium", 2.99, 50)
+        Plan("freemium", 0, 300),
+        Plan("basic", 1, 1200),
+        Plan("premium", 2.99, 5000)
     ]
     with app.app_context():
         for plan in plans:

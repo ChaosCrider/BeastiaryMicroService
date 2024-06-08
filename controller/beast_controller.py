@@ -314,8 +314,9 @@ def delete_beast(id):
                 type: "string"
     """
     try:
-        url = f'{host}{port}/Data/Beast/Del{id}'
-        beast = url_call(url)
+        url = f'{host}{port}/Data/Beast/Del/{id}'
+        beast = url_call(url, "delete")
+        print(beast)
         return beast
     except py_requests.exceptions.HTTPError as http_err:
         return (f"HTTP error occurred: {http_err}")
@@ -400,9 +401,12 @@ def update_beast(beast_id):
               message:
                 type: "string"
     """
+    print('update endpoint reached')
     json_data = flask_request.get_json()
     token = json_data.get("token", None)
+    print(token)
     if token:
+
         #get user by token
         url = f'{host}{port}/Data/User/Token'
         user_data = url_call_json(url, token)
@@ -414,6 +418,7 @@ def update_beast(beast_id):
         consumption = user_data.get('consumption', 65535)
         plan_id = user_data.get('plan_id', 1)
 
+        print(f'user {user_id}, cons{consumption}, plan {plan_id}')
         #get plan's allowance
         url = f'{host}{port}/Data/Plan/{plan_id}'
         plan_data = url_call(url)
@@ -431,9 +436,13 @@ def update_beast(beast_id):
                 return (f"An error occurred: {err}")
 
             try:
+                print(1)
                 url = f'{host}{port}/Data/Beast/Update/{beast_id}'
+                print('2, ', url)
                 json_data = flask_request.get_json()
+                print('3 ,', json_data)
                 beast = url_call_json(url, json_data, "put")
+                print(beast)
                 return beast, 201
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
@@ -453,7 +462,10 @@ def url_call_json(url, json, method=None):
     return response.text
 
 
-def url_call(url):
-    response = py_requests.get(url)
+def url_call(url, method=None):
+    if method == "delete":
+        response = py_requests.delete(url)
+    else:
+        response = py_requests.get(url)
     response.raise_for_status()
     return response.text
